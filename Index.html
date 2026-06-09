@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pizzería Nueva Orleans</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+<style>
+</style>
+</head>
+
+<!-- WhatsApp -->
+<a href="https://wa.me/573227904638" target="_blank" class="whatsapp-float">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+</a>
+
+<body>
+
+  <script type="module" src="https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs"></script>
+  <script type="module">
+    var myLandbot = new Landbot.Livechat({
+      configUrl: 'https://storage.googleapis.com/landbot.online/v3/H-3442776-2L0ROHSTXXLOWY45/index.json',
+    });
+  </script>
+
+
+<!-- ══ NAVEGACIÓN ══ --> <!-- ══ SECTCION BARRA DE NAVEGACION PARTE DE ARRIBA ══ -->
+<!-- ══ NAVEGACIÓN ══ -->
+<nav>
+  <div class="nav-brand">
+    <img src="LogoPizzeria.png" alt="Logo" class="nav-logo-img">
+    <span class="nav-logo">Pizzería<br>Nueva Orleans</span>
+  </div>
+
+  <ul class="nav-links">
+    <li><a href="index.html">Inicio</a></li>
+    <li><a href="nosotros.html">Nosotros</a></li>
+    <li><a href="productos.html">Productos</a></li>
+    <li><a href="reservacion.html">Reservación</a></li>
+    <li><a href="contacto.html">Contacto</a></li>
+  </ul>
+</nav>
+
+<!-- ══ HERO ══ --><!-- ══ PAGINA PRINCIPAL DE NEW ORLEANS ══ -->
+<section id="inicio">
+  <div class="hero-content">
+    <p class="hero-eyebrow">Ibagué, Colombia</p>
+    <h1 class="hero-title">Pizzería<br><em>Nueva Orleans</em></h1>
+    <div class="hero-divider"></div>
+    <p class="hero-sub">El sabor que une generaciones</p>
+    <div class="hero-btns">
+      <a href="productos.html" class="btn-primary">Ver Productos</a>
+      <a href="reservacion.html" class="btn-outline">Reservar Mesa</a>
+    </div>
+  </div>
+
+  <div class="hero-img-wrap">
+    <img src="pizza especial.png" alt="Pizza" class="hero-pizza-img">
+  </div>
+</section>
+
+<!-- ══ CARRUSEL ══ -->
+<div class="carousel-section">
+  <div class="carousel-wrap" id="carousel">
+    <div class="carousel-track" id="carouselTrack">
+
+      <div class="carousel-slide slide-1">
+        <div class="slide-body">
+          <span class="slide-badge">Programa de fidelidad</span>
+          <h2 class="slide-title">Acumula puntos<br><span class="accent">doble pizza</span></h2>
+          <p class="slide-desc">Cada pizza que llevas te da puntos canjeables en futuras compras.</p>
+        <a href="contacto.html" class="slide-cta">Ordenar ahora</a>
+        </div>
+        <div class="slide-img">
+          <img src="pizza especial.png" alt="Pizza especial">
+
+        </div>
+      </div>
+
+
+      <div class="carousel-slide slide-2">
+        <div class="slide-body">
+          <span class="slide-badge">Oferta especial</span>
+          <h2 class="slide-title">2 x 1 en<br><span class="accent">pizzas medianas</span></h2>
+          <p class="slide-desc">Dos pizzas medianas por solo <strong style="color:#fff;">$38.900</strong>. ¡Solo por tiempo limitado!</p>
+        </div>
+        <div class="slide-img">
+          <img src="peperoni.png" alt="Pizza pepperoni">
+
+        </div>
+      </div>
+
+      <div class="carousel-slide slide-3">
+        <div class="slide-body">
+          <span class="slide-badge">Precio exclusivo</span>
+          <h2 class="slide-title">Única mediana<br><span class="accent">$21.900</span></h2>
+          <p class="slide-desc">Agrega borde relleno de queso por solo <strong style="color:#fff;">$8.600</strong> más.</p>
+          <a href="reservacion.html" class="slide-cta"> Reserva Ahora</a>
+        </div>
+        <div class="slide-img">
+          <img src="clasica.png" alt="Pizza clasica">
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="carousel-counter" id="carouselCounter">01 / 03</div>
+    <button class="carousel-btn prev" onclick="carouselMove(-1)" aria-label="Anterior">&#8249;</button>
+    <button class="carousel-btn next" onclick="carouselMove(1)" aria-label="Siguiente">&#8250;</button>
+    <div class="carousel-dots" id="carouselDots">
+      <button class="carousel-dot active" onclick="carouselGoTo(0)"></button>
+      <button class="carousel-dot" onclick="carouselGoTo(1)"></button>
+      <button class="carousel-dot" onclick="carouselGoTo(2)"></button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  /* ── Carrusel ── */
+  let carouselCur = 0;
+  const carouselTotal = 3;
+  const carouselTrack = document.getElementById('carouselTrack');
+  const carouselDots  = document.querySelectorAll('.carousel-dot');
+  const carouselCounter = document.getElementById('carouselCounter');
+  let carouselTimer;
+
+  function carouselGoTo(i) {
+    carouselCur = (i + carouselTotal) % carouselTotal;
+    carouselTrack.style.transform = 'translateX(-' + (carouselCur * 100) + '%)';
+    carouselDots.forEach((d, idx) => d.classList.toggle('active', idx === carouselCur));
+    carouselCounter.textContent =
+      String(carouselCur + 1).padStart(2,'0') + ' / ' + String(carouselTotal).padStart(2,'0');
+  }
+
+  function carouselMove(dir) {
+    clearInterval(carouselTimer);
+    carouselGoTo(carouselCur + dir);
+    carouselStartAuto();
+  }
+
+  function carouselStartAuto() {
+    carouselTimer = setInterval(() => carouselGoTo(carouselCur + 1), 4500);
+  }
+
+  carouselStartAuto();
+</script>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+ <span class="footer-logo">Pizzería Nueva Orleans</span>
+ <span class="footer-copy">© 2025 · El sabor que une generaciones</span>
+</footer>
+
+
+
+</body>
+</html>

@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Productos — Pizzería Nueva Orleans</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+
+<style>
+/* ══════════════════════════════════════
+   CARRITO DE COMPRAS — Nueva Orleans
+══════════════════════════════════════ */
+
+/* Botón flotante del carrito */
+#cart-fab {
+  position: fixed;
+  bottom: 6.5rem;
+  right: 2rem;
+  width: 58px;
+  height: 58px;
+  background: #EF131B;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(239,19,27,0.45);
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 1.5rem;
+}
+#cart-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(239,19,27,0.6);
+}
+#cart-count {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 20px; height: 20px;
+  background: #fff;
+  color: #EF131B;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Lato', sans-serif;
+}
+
+/* Panel lateral del carrito */
+#cart-panel {
+  position: fixed;
+  top: 0; right: -420px;
+  width: 400px;
+  height: 100vh;
+  background: #111;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.6);
+  transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+  font-family: 'Lato', sans-serif;
+  border-left: 1px solid rgba(239,19,27,0.25);
+}
+#cart-panel.open { right: 0; }
+
+/* Overlay oscuro */
+#cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+#cart-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Header del panel */
+#cart-header {
+  background: #EF131B;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#cart-header h3 {
+  color: #fff;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  margin: 0;
+}
+#cart-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#cart-items-count {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.8rem;
+}
+#cart-close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+/* Lista de items */
+#cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#cart-items::-webkit-scrollbar { width: 4px; }
+#cart-items::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+/* Estado vacío */
+#cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255,255,255,0.3);
+  gap: 12px;
+  font-size: 0.9rem;
+}
+#cart-empty .empty-icon { font-size: 3rem; }
+
+/* Item del carrito */
+.cart-item {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.cart-item-emoji { font-size: 2rem; flex-shrink: 0; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cart-item-price {
+  color: #EF131B;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cart-qty-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+.cart-qty-btn:hover { background: #EF131B; border-color: #EF131B; }
+.cart-qty-btn.minus:hover { background: #333; border-color: #555; }
+.cart-qty {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Footer del carrito */
+#cart-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: #0a0a0a;
+}
+#cart-subtotal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+#cart-subtotal-label {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.82rem;
+}
+#cart-subtotal {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+#cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+#cart-total-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+#cart-total {
+  color: #EF131B;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+#cart-note-label {
+  color: rgba(255,255,255,0.45);
+  font-size: 0.75rem;
+  margin-bottom: 6px;
+  display: block;
+}
+#cart-note {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-family: 'Lato', sans-serif;
+  outline: none;
+  resize: none;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+#cart-note:focus { border-color: #EF131B; }
+#cart-note::placeholder { color: rgba(255,255,255,0.25); }
+#cart-whatsapp-btn {
+  width: 100%;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.03em;
+}
+#cart-whatsapp-btn:hover { background: #1da851; transform: translateY(-1px); }
+#cart-whatsapp-btn:disabled {
+  background: #333;
+  color: rgba(255,255,255,0.3);
+  cursor: not-allowed;
+  transform: none;
+}
+.wa-icon { font-size: 1.2rem; }
+
+/* Toast de confirmación */
+#cart-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 11000;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#cart-toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Animación del botón Pedir */
+.btn-agregar.added {
+  background: #25D366 !important;
+  transform: scale(0.95);
+}
+
+@media (max-width: 480px) {
+  #cart-panel { width: 100vw; right: -100vw; }
+  #cart-fab { left: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LANDBOT ══ -->
+<script type="module" src="https://cdn.landbot.io/landbot-3/landbot-3.0.0.mjs"></script>
+<script type="module">
+  var myLandbot = new Landbot.Livechat({
+    configUrl: 'https://storage.googleapis.com/landbot.online/v3/H-3442776-2L0ROHSTXXLOWY45/index.json',
+  });
+</script>
+
+<!-- ══ CARRITO: botón flotante ══ -->
+<button id="cart-fab" title="Ver carrito">
+  🛒
+  <span id="cart-count"></span>
+</button>
+
+<!-- ══ CARRITO: overlay ══ -->
+<div id="cart-overlay"></div>
+
+<!-- ══ CARRITO: panel lateral ══ -->
+<div id="cart-panel">
+  <div id="cart-header">
+    <h3>🍕 Tu pedido</h3>
+    <div id="cart-header-right">
+      <span id="cart-items-count"></span>
+      <button id="cart-close-btn">✕</button>
+    </div>
+  </div>
+
+  <div id="cart-items">
+    <div id="cart-empty">
+      <span class="empty-icon">🍕</span>
+      <span>Tu carrito está vacío</span>
+      <span style="font-size:0.78rem; color:rgba(255,255,255,0.2)">Agrega pizzas para hacer tu pedido</span>
+    </div>
+  </div>
+
+  <div id="cart-footer">
+    <div id="cart-subtotal-row">
+      <span id="cart-subtotal-label">Subtotal</span>
+      <span id="cart-subtotal">$0</span>
+    </div>
+    <div id="cart-total-row">
+      <span id="cart-total-label">Total</span>
+      <span id="cart-total">$0</span>
+    </div>
+    <label id="cart-note-label">Nota para tu pedido (Especifica si deseas la porción o la familiar, Sandwich de 20 o 40 cm) Ya que los precios varian.</label>
+    <textarea id="cart-note" rows="2" placeholder="Ej: sin cebolla, extra queso…"></textarea>
+    <button id="cart-whatsapp-btn" disabled>
+      <span class="wa-icon">📲</span> Enviar pedido por WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="cart-toast">✅ Añadido al carrito</div>
+
+<!-- ══ NAVEGACIÓN ══ -->
+<nav>
+  <div class="nav-brand">
+    <img src="LogoPizzeria.png" alt="Logo" class="nav-logo-img">
+    <span class="nav-logo">Pizzería<br>Nueva Orleans</span>
+  </div>
+
+  <ul class="nav-links">
+    <li><a href="index.html">Inicio</a></li>
+    <li><a href="nosotros.html">Nosotros</a></li>
+    <li><a href="productos.html">Productos</a></li>
+    <li><a href="reservacion.html">Reservación</a></li>
+    <li><a href="contacto.html">Contacto</a></li>
+  </ul>
+</nav>
+
+<!-- ══ PRODUCTOS ══ -->
+<section id="productos" class="productos-section">
+  <div class="section-header">
+    <h2>Nuestras pizzas</h2>
+    <p>Masa artesanal, ingredientes frescos.</p>
+  </div>
+
+  <div class="productos-grid">
+
+    <div class="producto-card" data-nombre="Porción Pizza Nueva Orlean's" data-precio="10000">
+<img src="ImagenesProductos/NvaO.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-popular">⭐ Popular</span>
+        <p class="producto-nombre">Pizza Nueva Orlean's</p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Tocineta - Cebolla - Cabano - Cordero - Maiz Tierno - Pimenton.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">Porcion personal - Pizza familiar (10 porciones)</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Pizza Pepperoni" data-precio="10000">
+<img src="ImagenesProductos/Peperoni.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Pepperoni</p>
+        <p class="producto-desc">Salsa roja, mozzarella y pepperoni ahumado</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$10.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Pizza Hawaiana" data-precio="8500">
+<img src="ImagenesProductos/Hawaiana.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Hawaiana</p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Jamón - Piña.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$8.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Pizza Mixta" data-precio="8500">
+<img src="ImagenesProductos/Mixta.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-popular">⭐ Popular</span>
+        <p class="producto-nombre">Pizza Mixta</p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Salami
+- Jamón - Champiñones - Pollo - Pimenton - Cebolla. </p>
+        <div class="producto-footer">
+          <span class="producto-precio">$8.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porcion Pizza Vegetariana" data-precio="10000">
+<img src="ImagenesProductos/Vegetariana.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Vegetariana</p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Cebolla - Tomate
+- Campiñones - Maiz Tierno - Pimenton - Especies.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$10.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porcion Pizza Pollo con Champiñones" data-precio="8500">
+<img src="ImagenesProductos/Pollo.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Pollo con Champiñones</p>
+        <p class="producto-desc">Salsa Napolitana - Queso -  Pollo
+- Champiñones - Especies. </p>
+        <div class="producto-footer">
+          <span class="producto-precio">$8.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Pizza Carnes" data-precio="10000">
+<img src="ImagenesProductos/Carnes.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Carnes </p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Salami - Jamón
+- Pollo - Cabano - Cebolla  - Pimenton.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$10.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Pizza Mexicana" data-precio="10000">
+<img src="ImagenesProductos/Mexicana.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Mexicana </p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Carne Boloñesa
+- Cebolla - Tomate - Maiz Tierno - Picante
+- Cilantro - Tostacos.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$10.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Pizza Capricho" data-precio="10000">
+<img src="ImagenesProductos/Capricho.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pizza Capricho</p>
+        <p class="producto-desc">Salsa Napolitana - Queso - Bocadillo.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$10.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Lasaña Mixta" data-precio="12500">
+<img src="ImagenesProductos/LasañaM.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Lasaña Mixta</p>
+        <p class="producto-desc">Pasta para lasaña - Carne Boloñesa - Jamón
+- Champiñones - Pollo - Queso - Oregano.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$12.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Lasaña Pollo y Champiñon" data-precio="13000">
+<img src="ImagenesProductos/LasañaC.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Lasaña Pollo Champiñon</p>
+        <p class="producto-desc">Pasta para lasaña - Champiñones - Pollo
+Queso - Oregano.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$13.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Sandwich Especial " data-precio="11000">
+<img src="ImagenesProductos/SandwichE.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Sandwich Especial</p>
+        <p class="producto-desc">Jamón - Jamonada - Cordero - Salami
+- Tomate - Lechuga - Queso.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$11.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Sandwich Super Especial 20 cm " data-precio="12000">
+<img src="ImagenesProductos/SandwichSE.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Sandwich Super Especial 20 cm o 40 cm</p>
+        <p class="producto-desc">Jamón - Jamonada - Cordero - Salami
+Pollo - Tomate - Lechuga - Queso.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$12.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Porción Sandwich Cordero con Pollo 20 cm " data-precio="12500">
+<img src="ImagenesProductos/SandwichC.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Sandwich Cordero con Pollo 20 cm o 40 cm</p>
+        <p class="producto-desc">Cerdo - Pollo - Tomate - Lechuga - Queso.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$12.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Hamburguesa Mixta + Papas " data-precio="18500">
+<img src="ImagenesProductos/HamburguesaM.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Hamburguesa Mixta  + papas</p>
+        <p class="producto-desc">Carne Artesanal - Pollo - Jamón - Lecuga
+- Tomate - Queso - Papas.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$18.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Hamburguesa Hawaiana + Papas " data-precio="18500">
+<img src="ImagenesProductos/HamburguesaH.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Hamburguesa Hawaiana + papas</p>
+        <p class="producto-desc">Carne Artesanal - Trozos de piña - Jamón
+- Lecuga - Tomate - Queso - Papas.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$18.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="producto-card" data-nombre="Salchipapa Sencillo" data-precio="12000">
+<img src="ImagenesProductos/SalchipapaS.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Salchipapa Sencillo</p>
+        <p class="producto-desc">300g de papa - Salchica Americana
+- Queso.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$12.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Salchipapa Especial" data-precio="18000">
+<img src="ImagenesProductos/SalchipapaE.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Salchipapa Especial</p>
+        <p class="producto-desc">300g de papa - Salchica Americana
+- Papa Ripido - Queso - Pollo Desmechado
+- Tocineta - Maiz tierno.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$18.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Perro Caliente" data-precio="8500">
+<img src="ImagenesProductos/PerroC.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Perro Caliente</p>
+        <p class="producto-desc">Salchicha Americana - Queso - Papa Ripio.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$8.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/Pepsi.png" alt="Gaseosa Postobón Personal" class="producto-img">
+    <div class="producto-info">
+      <span class="badge-empty">x</span>
+      <p class="producto-nombre">Gaseosa Postobón</p>
+      <p class="producto-desc">Pepsi.</p>
+      <div class="producto-footer">
+        <span class="producto-precio">$3.600</span>
+        <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+      </div>
+    </div>
+
+  </div>
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/Manzana.png" alt="Gaseosa Postobón Personal" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Gaseosa Postobón</p>
+        <p class="producto-desc">Manzana.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/Uva.png" alt="Gaseosa Postobón Personal" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Gaseosa Postobón</p>
+        <p class="producto-desc"> Uva.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/Colombiana.png" alt="Gaseosa Postobón Personal" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Gaseosa Postobón</p>
+        <p class="producto-desc"> Colombiana.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/Naranja.png" alt="Gaseosa Postobó Personal" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Gaseosa Postobón</p>
+        <p class="producto-desc"> Naranja.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/7up.png" alt="Gaseosa Postobón Personal" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Gaseosa Postobón Personal</p>
+        <p class="producto-desc"> 7UP.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Gaseosa Postobón" data-precio="3600">
+<img src="ImagenesProductos/Bretaña.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Gaseosa Postobón Personal</p>
+        <p class="producto-desc"> Bretaña.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="producto-card" data-nombre="Jugo Hit" data-precio="3600">
+<img src="ImagenesProductos/Mora.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Jugo Hit Personal</p>
+        <p class="producto-desc">Mora.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Jugo Hit" data-precio="3600">
+<img src="ImagenesProductos/Mango.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Jugo Hit Personal</p>
+        <p class="producto-desc">Mango.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Jugo Hit" data-precio="3600">
+<img src="ImagenesProductos/Tropical.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Jugo Hit Personal</p>
+        <p class="producto-desc">Tropical.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Jugo Hit" data-precio="3600">
+<img src="ImagenesProductos/Piña.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Jugo Hit Personal</p>
+        <p class="producto-desc">Piña Naranja.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.600</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="producto-card" data-nombre="Agua" data-precio="3000">
+<img src="ImagenesProductos/Agua.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Agua </p>
+        <p class="producto-desc">Normal.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Agua" data-precio="3000">
+<img src="ImagenesProductos/Gas.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Agua con Gas</p>
+        <p class="producto-desc">Con Gas.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$3.000</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Mister Te" data-precio="4200">
+<img src="ImagenesProductos/Limon.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Mister Te</p>
+        <p class="producto-desc">Limon.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$4.200</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Mister Te" data-precio="4200">
+<img src="ImagenesProductos/Durazno.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Mister Te</p>
+        <p class="producto-desc">Durazno.</p>
+        <div class="producto-footer">
+          <span class="producto-precio">$4.200</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="producto-card" data-nombre="Ponuy Malta" data-precio="4200">
+<img src="ImagenesProductos/Pony.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Pony Malta</p>
+        <p class="producto-desc"></p>
+        <div class="producto-footer">
+          <span class="producto-precio">$4.200</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Cerveza Poker" data-precio="4500">
+<img src="ImagenesProductos/Poker.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Cerveza Poker</p>
+        <p class="producto-desc"></p>
+        <div class="producto-footer">
+          <span class="producto-precio">$4.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Cerveza Aguila" data-precio="5500">
+<img src="ImagenesProductos/Aguila.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Cerveza Aguila</p>
+        <p class="producto-desc"></p>
+        <div class="producto-footer">
+          <span class="producto-precio">$5.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="producto-card" data-nombre="Cerveza Club Dorada" data-precio="5500">
+<img src="ImagenesProductos/Club.png" alt="" class="producto-img">
+      <div class="producto-info">
+        <span class="badge-empty">x</span>
+        <p class="producto-nombre">Cerveza Club Dorada</p>
+        <p class="producto-desc"></p>
+        <div class="producto-footer">
+          <span class="producto-precio">$5.500</span>
+          <button class="btn-agregar"><i class="ti ti-plus" style="font-size:13px"></i> Pedir</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <span class="footer-logo">Pizzería Nueva Orleans</span>
+  <span class="footer-copy">© 2025 · El sabor que une generaciones</span>
+</footer>
+
+<!-- ══ SCRIPT CARRITO ══ -->
+<script>
+(function () {
+  const WHATSAPP_NUMBER = '573227904638';
+  const EMOJIS = ['🍕','🍕','🧀','🍍','🥦','🍗','🥩','🦐'];
+
+  let cart = []; // [{ id, nombre, precio, cantidad, emoji }]
+  let toastTimer;
+
+  /* ── Elementos ── */
+  const fab       = document.getElementById('cart-fab');
+  const countBadge= document.getElementById('cart-count');
+  const panel     = document.getElementById('cart-panel');
+  const overlay   = document.getElementById('cart-overlay');
+  const closeBtn  = document.getElementById('cart-close-btn');
+  const itemsList = document.getElementById('cart-items');
+  const emptyEl   = document.getElementById('cart-empty');
+  const itemsCount= document.getElementById('cart-items-count');
+  const subtotalEl= document.getElementById('cart-subtotal');
+  const totalEl   = document.getElementById('cart-total');
+  const noteEl    = document.getElementById('cart-note');
+  const waBtn     = document.getElementById('cart-whatsapp-btn');
+  const toast     = document.getElementById('cart-toast');
+
+  /* ── Abrir / cerrar ── */
+  function openCart()  { panel.classList.add('open'); overlay.classList.add('open'); }
+  function closeCart() { panel.classList.remove('open'); overlay.classList.remove('open'); }
+
+  fab.addEventListener('click', openCart);
+  closeBtn.addEventListener('click', closeCart);
+  overlay.addEventListener('click', closeCart);
+
+  /* ── Formatear precio ── */
+  function fmt(n) {
+    return '$' + n.toLocaleString('es-CO');
+  }
+
+  /* ── Renderizar carrito ── */
+  function render() {
+    // Limpiar items (mantener el empty)
+    Array.from(itemsList.children).forEach(el => {
+      if (el.id !== 'cart-empty') el.remove();
+    });
+
+    const totalUnits = cart.reduce((s, i) => s + i.cantidad, 0);
+    const total      = cart.reduce((s, i) => s + i.precio * i.cantidad, 0);
+
+    // Badge del FAB
+    if (totalUnits > 0) {
+      countBadge.style.display = 'flex';
+      countBadge.textContent = totalUnits;
+    } else {
+      countBadge.style.display = 'none';
+    }
+
+    // Estado vacío
+    emptyEl.style.display = cart.length === 0 ? 'flex' : 'none';
+
+    // Items
+    cart.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <span class="cart-item-emoji">${item.emoji}</span>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.nombre}</div>
+          <div class="cart-item-price">${fmt(item.precio)} c/u</div>
+        </div>
+        <div class="cart-item-controls">
+          <button class="cart-qty-btn minus" data-id="${item.id}">−</button>
+          <span class="cart-qty">${item.cantidad}</span>
+          <button class="cart-qty-btn plus" data-id="${item.id}">+</button>
+        </div>
+      `;
+      itemsList.appendChild(div);
+    });
+
+    // Totales
+    subtotalEl.textContent = fmt(total);
+    totalEl.textContent    = fmt(total);
+    itemsCount.textContent = totalUnits > 0 ? `${totalUnits} item${totalUnits > 1 ? 's' : ''}` : '';
+
+    // Botón WhatsApp
+    waBtn.disabled = cart.length === 0;
+  }
+
+  /* ── Agregar al carrito ── */
+  function agregarItem(nombre, precio, emoji) {
+    const existing = cart.find(i => i.nombre === nombre);
+    if (existing) {
+      existing.cantidad++;
+    } else {
+      cart.push({ id: nombre, nombre, precio, cantidad: 1, emoji });
+    }
+    render();
+    showToast(`🍕 ${nombre} añadido`);
+  }
+
+  /* ── Toast ── */
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  /* ── Clicks en botones Pedir ── */
+  document.querySelectorAll('.producto-card').forEach((card, idx) => {
+    const btn    = card.querySelector('.btn-agregar');
+    const nombre = card.dataset.nombre;
+    const precio = parseInt(card.dataset.precio, 10);
+    const emoji  = EMOJIS[idx] || '🍕';
+
+    btn.addEventListener('click', () => {
+      agregarItem(nombre, precio, emoji);
+      btn.classList.add('added');
+      setTimeout(() => btn.classList.remove('added'), 600);
+    });
+  });
+
+  /* ── Cambiar cantidad dentro del carrito ── */
+  itemsList.addEventListener('click', e => {
+    const id = e.target.closest('[data-id]')?.dataset.id;
+    if (!id) return;
+
+    if (e.target.closest('.plus')) {
+      cart.find(i => i.id === id).cantidad++;
+    } else if (e.target.closest('.minus')) {
+      const item = cart.find(i => i.id === id);
+      item.cantidad--;
+      if (item.cantidad <= 0) cart = cart.filter(i => i.id !== id);
+    }
+    render();
+  });
+
+  /* ── Enviar por WhatsApp ── */
+  waBtn.addEventListener('click', () => {
+    if (cart.length === 0) return;
+
+    let msg = '🍕 *Pedido — Pizzería Nueva Orleans*\n\n';
+    cart.forEach(item => {
+      msg += `• ${item.nombre} x${item.cantidad} → ${fmt(item.precio * item.cantidad)}\n`;
+    });
+
+    const total = cart.reduce((s, i) => s + i.precio * i.cantidad, 0);
+    msg += `\n*Total: ${fmt(total)}*`;
+
+    const nota = noteEl.value.trim();
+    if (nota) msg += `\n\n📝 Nota: ${nota}`;
+
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

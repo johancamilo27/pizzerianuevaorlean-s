@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pizzería Nueva Orleans</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+</head>
+
+<!-- WhatsApp -->
+<a href="https://wa.me/573227904638" target="_blank" class="whatsapp-float">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+</a>
+
+<body>
+
+<!-- ══ NAVEGACIÓN ══ -->
+<nav>
+  <div class="nav-brand">
+    <img src="LogoPizzeria.png" alt="Logo" class="nav-logo-img">
+    <span class="nav-logo">Pizzería<br>Nueva Orleans</span>
+  </div>
+  
+  <ul class="nav-links">
+    <li><a href="index.html">Inicio</a></li>
+    <li><a href="nosotros.html">Nosotros</a></li>
+    <li><a href="productos.html">Productos</a></li>
+    <li><a href="reservacion.html">Reservación</a></li>
+    <li><a href="contacto.html">Contacto</a></li>
+  </ul>
+</nav>
+
+<!-- ══ RESERVACIÓN ══ -->
+<section id="reservacion">
+  <div class="container reservacion-inner">
+    <span class="section-label">Reserva tu lugar</span>
+    <h2 class="section-title">Haz tu reservación</h2>
+    <p>Garantiza tu mesa y vive una experiencia única. Respondemos en menos de 30 minutos.</p>
+
+    <form id="reservaForm" action="https://api.web3forms.com/submit" method="POST">
+
+      <!-- ══ WEB3FORMS CONFIG ══ -->
+      <!-- 1. Ve a web3forms.com, pon tu correo y pega tu clave aquí abajo -->
+      <input type="hidden" name="access_key" value="94da9daf-c37d-4778-b798-f410b2457137">
+      <!-- 2. Asunto del correo que recibirás -->
+      <input type="hidden" name="subject" value="🍕 Nueva Reservación - Pizzería Nueva Orleans">
+      <!-- 3. Evita que redirija a otra página -->
+      <input type="hidden" name="redirect" value="false">
+      <!-- 4. Nombre del formulario para identificarlo en tu bandeja -->
+      <input type="hidden" name="from_name" value="Pizzería Nueva Orleans - Web">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
+        </div>
+        <div class="form-group">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" name="telefono" placeholder="300 000 0000" required
+            pattern="[0-9\s\+\-]{7,15}" title="Ingresa un número de teléfono válido">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" name="fecha" required>
+        </div>
+        <div class="form-group">
+          <label for="hora">Hora</label>
+          <input type="time" id="hora" name="hora" min="12:00" max="22:00" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="personas">Número de personas</label>
+          <select id="personas" name="personas" required>
+            <option value="" disabled selected>Selecciona</option>
+            <option value="1 persona">1 persona</option>
+            <option value="2 personas">2 personas</option>
+            <option value="3 – 4 personas">3 – 4 personas</option>
+            <option value="5 – 6 personas">5 – 6 personas</option>
+            <option value="7 o más">7 o más</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="ocasion">Ocasión</label>
+          <select id="ocasion" name="ocasion" required>
+            <option value="" disabled selected>Selecciona</option>
+            <option value="Cena informal">Cena informal</option>
+            <option value="Cumpleaños">Cumpleaños</option>
+            <option value="Aniversario">Aniversario</option>
+            <option value="Reunión de negocios">Reunión de negocios</option>
+            <option value="Otra">Otra</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group form-full">
+          <label for="solicitudes">Solicitudes especiales</label>
+          <textarea id="solicitudes" name="solicitudes"
+            placeholder="Alergias, decoración especial, silla para bebé…"></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary form-submit" id="btnEnviar">
+        Confirmar reservación
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <span class="footer-logo">Pizzería Nueva Orleans</span>
+  <span class="footer-copy">© 2025 · El sabor que une generaciones</span>
+</footer>
+
+<!-- ══ NOTIFICACIONES ══ -->
+<div id="toast"></div>
+
+<script>
+  const form = document.getElementById('reservaForm');
+  const btn  = document.getElementById('btnEnviar');
+  const toast = document.getElementById('toast');
+
+  function mostrarToast(msg, exito) {
+    toast.textContent = msg;
+    toast.style.background = exito ? '#2e7d32' : '#c62828';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
+  /* Bloquear fechas pasadas */
+  const inputFecha = document.getElementById('fecha');
+  const hoy = new Date().toISOString().split('T')[0];
+  inputFecha.setAttribute('min', hoy);
+
+  /* Envío via fetch para no salir de la página */
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+
+    const datos = new FormData(form);
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: datos
+      });
+
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        mostrarToast('✓ ¡Reservación enviada! Te contactaremos pronto.', true);
+        form.reset();
+        inputFecha.setAttribute('min', hoy); // resetea el mínimo
+      } else {
+        mostrarToast('✗ Hubo un error. Intenta de nuevo.', false);
+      }
+    } catch (err) {
+      mostrarToast('✗ Error de conexión. Verifica tu internet.', false);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Confirmar reservación';
+  });
+
+  /* Scroll suave para links internos */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
